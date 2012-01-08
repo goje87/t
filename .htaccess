@@ -1,5 +1,5 @@
 #application/x-httpd-php .html .htm
-#php_value auto_prepend ../common/init.php
+#php_value auto_prepend ../G87/init.php
 RewriteEngine on
 RewriteRule (reindex.php)$ reindex.php [NC]
 RewriteRule (setup.php)$ setup.php [NC]

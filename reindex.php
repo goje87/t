@@ -1,7 +1,7 @@
 <?php
-require_once '../common/php/Utils.php';
+require_once '../G87/php/Utils.php';
 require_once 'Tagz.php';
-require_once('../common/php/DB.php');
+require_once('../G87/php/DB.php');
 require_once('./dbConfig.php');
 
 // select all objects from the `objects` table and run the update function of Tagz class on it.
