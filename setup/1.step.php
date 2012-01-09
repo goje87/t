@@ -10,6 +10,8 @@ if($request->submit) {
   $config->DB_PASSWORD = $request->password;
   $config->DB_DATABASE = $request->database;
   
+  Logger::info("Going to write config: ", $config);
+  Logger::info("$appConfigPath");
   fwrite($appConfigFile, json_encode($config));
   fclose($appConfigFile);
   $setup->nextStep();
