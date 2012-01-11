@@ -12,11 +12,12 @@ class Tagz
   public static function init()
   {
   	// Set the default database server.
-  	DB::setServer((object)array(
-  	  "host" => DB_HOST,
-  	  "username" => DB_USERNAME,
-  	  "password" => DB_PASSWORD,
-  	  "database" => DB_DATABASE));
+  	// TODO: Remove the following lines of codes. DB will automatically be set by G87.
+  	// DB::setServer((object)array(
+  	  // "host" => DB_HOST,
+  	  // "username" => DB_USERNAME,
+  	  // "password" => DB_PASSWORD,
+  	  // "database" => DB_DATABASE));
   	
     $regs = & self::$regs;
     $regs[':key'] = "([\w$]([\w\d$])*)";

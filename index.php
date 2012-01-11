@@ -1,7 +1,7 @@
 <?php
 
 // redirect to the respective php script if a .php file was entered.
-if(preg_match("/(\.php)$/i", $_SERVER['REDIRECT_URL'])) {
+if(preg_match("/(\.(php|js))$/i", $_SERVER['REDIRECT_URL'])) {
   // preg_match("/([a-z0-9_\-]+\.php)$/i", $_SERVER['SCRIPT_URL'], $matches);
   // $script = $matches[0];
   $script_url = $_SERVER['REDIRECT_URL'];
@@ -37,10 +37,6 @@ switch($reqMethod)
     break;
 }
 
-/*echo '<font color="#888888">';
-Utils::printR($_SERVER);
-echo '</font>';*/
-
 function selectObjects()
 {
   if($_GET['exec'])
@@ -54,13 +50,13 @@ function selectObjects()
     Utils::outputResponse(Tagz::selectFromQuery($_GET['q']));
     return;
   }
-  // Get the directory path
-  $dirPath = $_SERVER['SCRIPT_URL'];
-
-  // trim off the '/t/' from the string
-  $tagPath = preg_replace("/^\/t\//",'',$dirPath);
-
-  Utils::outputResponse(Tagz::selectFromPath($tagPath));
+  // // Get the directory path
+  // $dirPath = $_SERVER['SCRIPT_URL'];
+// 
+  // // trim off the '/t/' from the string
+  // $tagPath = preg_replace("/^\/t\//",'',$dirPath);
+// 
+  // Utils::outputResponse(Tagz::selectFromPath($tagPath));
 }
 
 function createObject()
