@@ -424,42 +424,15 @@ class Tagz
     $object = json_decode($objJson);
 
     $objectId = $object->objectId;
-    /*$tags = $object->tags;
-    // Update `tags` table
-    $tagsQuery = self::insertTagsQuery($tags);
-    
-    // update `tagMap` table
-    
-    // convert tag names from xxxxx to 'xxxxx'
-    for($i=0; $i<count($tags); $i++)
-    {
-      $tags[$i] = "'".$tags[$i]."'";
-    }
-    $tagsJoin = implode($tags, ',');
-    $insertTagMapQuery = 
-      "INSERT INTO `tagMap` (`tagId`, `objectId`)" .
-      "  SELECT `tagId`, $objectId FROM `tags`" .
-      "    WHERE `tagName` IN ($tagsJoin)" .
-      "  ON DUPLICATE KEY UPDATE `objectId` = `objectId`;";
-    $deleteTagMapQuery = 
-      "DELETE FROM `tagMap`" .
-      "  USING `tagMap` INNER JOIN `tags`" .
-      "  WHERE `tags`.`tagName` NOT IN($tagsJoin)" .
-      "  AND `tags`.`tagId` = `tagMap`.`tagId`" .
-      "  AND `tagMap`.`objectId` = $objectId;";
-      
-    $tagMapQuery = $insertTagMapQuery.$deleteTagMapQuery;*/
     
     // update `objects` table
     $type = $object->type;
     $objectJson = DB::escapeString(json_encode($object));
     $objectsQuery = 
-      "UPDATE `objects`, `tags`" .
+      "UPDATE `objects`" .
       "  SET `object` = '$objectJson'," .
-      "    `typeId` = `tags`.`tagId`," .
       "    `uid` = $uid" .
-      "  WHERE `tags`.`tagName` = '$type'" .
-      "  AND `objects`.`objectId` = $objectId;";
+      "  WHERE `objects`.`objectId` = $objectId;";
       
     $removeFromIndexQuery = self::removeFromIndexQuery($objectId);
     $addToIndexQuery = self::addToIndexQuery($object, $objectId);
