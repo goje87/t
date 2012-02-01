@@ -20,7 +20,7 @@ class Tagz
   	  // "database" => DB_DATABASE));
   	
     $regs = & self::$regs;
-    $regs[':key'] = "([\w$]([\w\d$])*)";
+    $regs[':key'] = "([\w$](\.?[\w\d\$])*)";
     $regs[':value'] = "(\'(([^\']|(?<=\\\\)\')*)\')";
     $regs[':operator'] = "(&|\|)";
     $regs[':bracket'] = "(\(|\))";
@@ -79,7 +79,7 @@ class Tagz
        
         
       // Add the objectId to object
-      $object->objectId = $currRow->objectId;
+      $object->meta->id = $currRow->objectId;
 
       $objects[] = $object;
     }
@@ -92,7 +92,10 @@ class Tagz
   
   public static function selectFromQuery($query)
   {
-  	$units = self::convertToUnits($query);
+    $userId = FB::getUserId();
+    $finalQuery = "($query) & (meta.rights.view: 'all' ".($userId?"| meta.rights.view:'$userId' | meta.user: '$userId'":"").")";
+    Logger::debug($finalQuery);
+  	$units = self::convertToUnits($finalQuery);
   	$sql = self::convertToSql($units);
   	$objects = self::processSql($sql);
 
@@ -210,7 +213,7 @@ class Tagz
           break;
           
         case ':pair':
-          if($unit->key == 'objectId')
+          if($unit->key == 'meta.id')
           {
             $conditions[] = "o.`objectId` = {$unit->value}";
           }
@@ -304,7 +307,7 @@ class Tagz
     //Utils::$silentMode = false;
     //Utils::printLine($sqlQuery);
      
-    
+    Logger::info($sqlQuery);
     return $sqlQuery;
     
   }
@@ -326,7 +329,7 @@ class Tagz
       $selectCol = self::$filters['selectCol'];
       if(!$selectCol->enabled)
       {
-        $object->objectId = $row->objectId;
+        $object->meta->id = $row->objectId;
         $objects[] = $object;
       }
       else
@@ -347,18 +350,15 @@ class Tagz
     
     // Decode object Json
     $object = json_decode($objJson);
-    $object->user = $uid;
-
-    // TODO: Remove self::insertTagsQuery()
-    /*// Query for `tags` table
-    if($object->tags)
-    {
-      $tagsQuery = self::insertTagsQuery($object->tags);
-    }*/
+    Logger::debug($object);
+    Logger::debug(is_object($object->meta));
+    if(!is_object($object->meta)) { $object->meta = new stdClass(); }
+    $object->meta->user = $uid;
+    $object->meta->createdOn = time();
+    Logger::debug($object);
+    exit;
     
-    // Prepare query for `objects` table
     $objectsQuery = "";
-    $object->createdOn = time();
     $objectJson = DB::escapeString(json_encode($object));
     $type = $object->type;
     
@@ -366,21 +366,6 @@ class Tagz
 
     $indexStmnt = self::AddToIndexQuery($object, 'LAST_INSERT_ID()');
     
-    /*
-    // Prepare query for adding the tag mappings to `tagMap` table
-    $tabMapQuery = "";
-
-    //Converting the tags from xxxxx to 'xxxxx'
-    $tags = $object->tags;
-    for($i=0; $i<count($tags); $i++)
-    {
-      $tags[$i] = "'".$tags[$i]."'";
-    }
-
-    // Forming the query
-    $tagsJoin = implode($tags, ',');
-    $tagMapQuery = "INSERT INTO `tagMap` (`tagId`, `objectId`) SELECT `tagId`, LAST_INSERT_ID() FROM `tags` WHERE `tagName` IN ($tagsJoin);";
-    */
     // Execute all the queries 
     $finalQuery = $objectsQuery."\n".$indexStmnt;
     $response = DB::execQuery($finalQuery, true);
@@ -423,7 +408,7 @@ class Tagz
     // Decode object Json
     $object = json_decode($objJson);
 
-    $objectId = $object->objectId;
+    $objectId = $object->meta->id;
     
     // update `objects` table
     $type = $object->type;
@@ -468,15 +453,30 @@ class Tagz
     }
   }
   
-  private static function AddToIndexQuery($object, $objectId)
+  private static function AddToIndexQuery($object, $objectId, $parentProperties = array())
   {
     $indexStmnts = Array();
     $indexStmnt = "";
-    
+    Logger::info($object);
     foreach($object as $property => $value)
     {
+      if(is_object($value)) {
+        $queries = self::AddToIndexQuery($value, $objectId, $parentProperties + array($property));
+        Logger::info($indexStmnts);
+        Logger::info($queries);
+        // $indexStmnts = $indexStmnts + array($queries);
+        $indexStmnts = array_merge($indexStmnts, array($queries));
+        Logger::info($indexStmnts);
+        continue;
+      }
+           
+      if($parentProperties) $property = implode(".", $parentProperties).".$property";
       if($property == 'objectId')
         continue;
+      
+      // Logger::info($property);
+      // Logger::info($value);
+      // Logger::info(is_object($value));
       
       $property = DB::escapeString($property);
       $value = DB::escapeString($value);
