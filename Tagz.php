@@ -43,6 +43,15 @@ class Tagz
       "dir" => 'ASC');
   }
 
+  protected static function getObject($id) {
+    $id = DB::escapeString($id);
+    $query = "SELECT `object` FROM `objects` WHERE `objectId` = '$id'";
+    $resultSet = DB::execQuery($query);
+    $row = $resultSet[0];
+    $object = json_decode($row->object);
+    return $object;
+  }
+  
   public static function selectFromPath($path)
   {    
     // convert the '\' to '/'
@@ -350,13 +359,9 @@ class Tagz
     
     // Decode object Json
     $object = json_decode($objJson);
-    Logger::debug($object);
-    Logger::debug(is_object($object->meta));
     if(!is_object($object->meta)) { $object->meta = new stdClass(); }
     $object->meta->user = $uid;
     $object->meta->createdOn = time();
-    Logger::debug($object);
-    exit;
     
     $objectsQuery = "";
     $objectJson = DB::escapeString(json_encode($object));
@@ -377,9 +382,8 @@ class Tagz
   {
     $uid = FB::getUserId();
     
-    // User needs to be signed in to delete an object. 
-    if(!$uid) return self::userNotLoggedInError();
-    
+    // Do not proceed if user does not have permission to delete
+    if(!self::userHasPermission($uid, $id, 'delete')) return false;
     
     // Query to delete the rows from objects table
     // for the passed $id
@@ -441,6 +445,32 @@ class Tagz
     return $tagsQuery;
   }
   
+  protected static function userHasPermission($userId, $objectId, $action) {
+    $object = self::getObject($objectId);
+    
+    // if the user is owner, he has permission to do anything
+    if($object->meta->user == $userId) return true;
+    
+    
+    
+    // check if the user is present in meta.rights
+    $rights = $object->meta->rights;
+    
+    // if no rights is defined user does not have permission
+    if(!$rights) return false;
+    
+    $users = $rights->$action;
+    if(!is_array($users)) return false;
+    
+    if(Utils::inArray('all', $users)) return true;
+    
+    if($userId) {
+      if(Utils::inArray($userId, $users)) return true;
+    }
+    
+    return false;
+  }
+  
   private static function userNotLoggedInError()
   {    
     if(!FB::getUserId())
@@ -457,26 +487,21 @@ class Tagz
   {
     $indexStmnts = Array();
     $indexStmnt = "";
-    Logger::info($object);
+    
     foreach($object as $property => $value)
     {
       if(is_object($value)) {
-        $queries = self::AddToIndexQuery($value, $objectId, $parentProperties + array($property));
-        Logger::info($indexStmnts);
-        Logger::info($queries);
-        // $indexStmnts = $indexStmnts + array($queries);
+        $properties = (array) $parentProperties;
+        $properties[] = $property;
+        $queries = self::AddToIndexQuery($value, $objectId, $properties);
+        
         $indexStmnts = array_merge($indexStmnts, array($queries));
-        Logger::info($indexStmnts);
         continue;
       }
            
       if($parentProperties) $property = implode(".", $parentProperties).".$property";
       if($property == 'objectId')
         continue;
-      
-      // Logger::info($property);
-      // Logger::info($value);
-      // Logger::info(is_object($value));
       
       $property = DB::escapeString($property);
       $value = DB::escapeString($value);
