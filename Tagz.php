@@ -11,13 +11,6 @@ class Tagz
   
   public static function init()
   {
-  	// Set the default database server.
-  	// TODO: Remove the following lines of codes. DB will automatically be set by G87.
-  	// DB::setServer((object)array(
-  	  // "host" => DB_HOST,
-  	  // "username" => DB_USERNAME,
-  	  // "password" => DB_PASSWORD,
-  	  // "database" => DB_DATABASE));
   	
     $regs = & self::$regs;
     $regs[':key'] = "([\w$](\.?[\w\d\$])*)";
@@ -400,19 +393,16 @@ class Tagz
   
   public static function update($objJson)
   {
-    // TODO: user needs to own the object that he's updating.
     // TODO: Create Error class.
     // TODO: Have a TagzError (extending Error) class to define errors related to tagz.
     
     $uid = FB::getUserId();
     
-    // User needs to be signed in to update an object. 
-    if(!$uid) return self::userNotLoggedInError();
-    
     // Decode object Json
     $object = json_decode($objJson);
-
     $objectId = $object->meta->id;
+    
+    if(!self::userHasPermission($uid, $objectId, "update")) return false;
     
     // update `objects` table
     $type = $object->type;
@@ -449,6 +439,8 @@ class Tagz
     $object = self::getObject($objectId);
     
     // if the user is owner, he has permission to do anything
+    Logger::debug($object);
+    Logger::debug($userId);
     if($object->meta->user == $userId) return true;
     
     
