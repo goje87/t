@@ -7,14 +7,10 @@ class Setup {
     $request = (object)$_REQUEST;
     
     $this->step = isset($request->step)?$request->step:1;
+    $this->app = isset($request->app)?$request->app:'G87';
   }
   
   public function nextStep() {
-    // $urlParts = parse_url(SCRIPT_URI);
-    // $step = $this->step + 1;
-    // $redirectUrl = "{$urlParts['scheme']}://{$urlParts['host']}{$urlParts['path']}?step=$step";
-//     
-    // echo "Please Wait...<script language=\"javascript\">window.location = '$redirectUrl';</script>";
     $this->goToStep($this->step + 1);
   }
   
@@ -23,10 +19,24 @@ class Setup {
   }
   
   public function goToStep($step) {
-    $urlParts = parse_url(SCRIPT_URI);
-    $redirectUrl = "{$urlParts['scheme']}://{$urlParts['host']}{$urlParts['path']}?step=$step";
+    // $urlParts = parse_url(SCRIPT_URI);
+    // $redirectUrl = "{$urlParts['scheme']}://{$urlParts['host']}{$urlParts['path']}?step=$step";
+    
+    $redirectUrl = $this->getRedirectUrl(SCRIPT_URI, array("step" => $step));
     
     echo "Please Wait...<script language=\"javascript\">window.location = '$redirectUrl';</script>";
+  }
+  
+  protected function getRedirectUrl($url, $params) {
+    $pairs = array();
+    foreach($params as $key => $value) {
+      $pairs[] = "$key=".urlencode($value);
+    }
+    $queryString = implode("&", $pairs);
+    
+    $urlParts = parse_url($url);
+    $redirectUrl = "{$urlParts['scheme']}://{$urlParts['host']}{$urlParts['path']}?$queryString";
+    return $redirectUrl;
   }
   
   public function hideNextButton() {
