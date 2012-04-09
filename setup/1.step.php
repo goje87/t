@@ -3,7 +3,7 @@ class Step extends SetupStep {
   public function execute() {
     $request = (object) $_REQUEST;
     $appConfigPath = APP_DOCUMENT_ROOT."/appConfig.json";
-    $appConfigFile = fopen($appConfigPath, "w");
+    $appConfigFile = fopen($appConfigPath, "w+");
     
     $config = new stdClass();
     $config->DB_HOST = $request->host;
