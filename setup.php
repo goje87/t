@@ -28,11 +28,13 @@ class Setup {
   }
   
   protected function getRedirectUrl($url, $params) {
-    $pairs = array();
-    foreach($params as $key => $value) {
-      $pairs[] = "$key=".urlencode($value);
-    }
-    $queryString = implode("&", $pairs);
+    // $pairs = array();
+    // foreach($params as $key => $value) {
+      // $pairs[] = "$key=".urlencode($value);
+    // }
+    // $queryString = implode("&", $pairs);
+    
+    $queryString = http_build_query($params);
     
     $urlParts = parse_url($url);
     $redirectUrl = "{$urlParts['scheme']}://{$urlParts['host']}{$urlParts['path']}?$queryString";
