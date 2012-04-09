@@ -2,7 +2,7 @@
 class Step extends SetupStep {
   public function execute() {
     $this->createTagzTables();
-    $this->setup->finish();
+    Setup::finish();
   }
   
   protected function createTagzTables() {

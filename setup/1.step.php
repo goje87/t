@@ -2,7 +2,8 @@
 class Step extends SetupStep {
   public function execute() {
     $request = (object) $_REQUEST;
-    $appConfigPath = APP_DOCUMENT_ROOT."/appConfig.json";
+    
+    $appConfigPath = G87_DOCUMENT_ROOT."/".Setup::$app."/appConfig.json";
     $appConfigFile = fopen($appConfigPath, "w+");
     
     $config = new stdClass();
@@ -15,7 +16,7 @@ class Step extends SetupStep {
     Logger::info("$appConfigPath");
     fwrite($appConfigFile, json_encode($config));
     fclose($appConfigFile);
-    $this->setup->nextStep();
+    Setup::nextStep(); 
   }
 }
 ?>
